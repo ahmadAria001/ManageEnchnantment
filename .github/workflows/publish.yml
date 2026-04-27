@@ -1,31 +1,33 @@
-name: Publish Release
+name: publish
 on:
   release:
     types: [published]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  publish:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup JDK
-        uses: actions/setup-java@v4
+      - name: checkout repository
+        uses: actions/checkout@v6
+
+      - name: setup jdk
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
-          distribution: 'temurin'
-          
-      - name: Build with Gradle
-        run: ./gradlew build
-        
-      - name: Upload to Modrinth
-        run: ./gradlew modrinth
+          distribution: 'microsoft'
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build and publish to modrinth
+        run: ./gradlew build modrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
 
-      - name: Upload to GitHub Release
+      - name: upload to github release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/*-base.jar 
+          files: |
+            build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
