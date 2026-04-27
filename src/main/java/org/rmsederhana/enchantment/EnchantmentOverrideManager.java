@@ -22,6 +22,9 @@ public class EnchantmentOverrideManager {
 
     // Maps Enchantment instances to their configured max levels
     private static final Map<Enchantment, Integer> MAX_LEVEL_OVERRIDES = new IdentityHashMap<>();
+    
+    // Maps Enchantment instances to their identifier paths (e.g. "sharpness")
+    private static final Map<Enchantment, String> ENCHANTMENT_PATHS = new IdentityHashMap<>();
 
     /**
      * Apply overrides from the config to all enchantments in the registry.
@@ -29,6 +32,7 @@ public class EnchantmentOverrideManager {
      */
     public static void applyOverrides(MinecraftServer server) {
         MAX_LEVEL_OVERRIDES.clear();
+        ENCHANTMENT_PATHS.clear();
 
         Registry<Enchantment> registry = server.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
         int overrideCount = 0;
@@ -45,6 +49,8 @@ public class EnchantmentOverrideManager {
             String enchantmentPath = id.getPath();
             Enchantment enchantment = entry.value();
             int vanillaMaxLevel = enchantment.definition().maxLevel();
+            
+            ENCHANTMENT_PATHS.put(enchantment, enchantmentPath);
 
             // Check if config has an override for this enchantment
             int configuredLevel = ConfigManager.getConfiguredMaxLevel(enchantmentIdStr, enchantmentPath, vanillaMaxLevel);
@@ -70,9 +76,20 @@ public class EnchantmentOverrideManager {
     }
 
     /**
+     * Get the identifier path for an Enchantment instance.
+     * 
+     * @param enchantment The enchantment instance
+     * @return The identifier path, or null if not registered
+     */
+    public static String getPath(Enchantment enchantment) {
+        return ENCHANTMENT_PATHS.get(enchantment);
+    }
+
+    /**
      * Clear all overrides (called on server stop).
      */
     public static void clearOverrides() {
         MAX_LEVEL_OVERRIDES.clear();
+        ENCHANTMENT_PATHS.clear();
     }
 }

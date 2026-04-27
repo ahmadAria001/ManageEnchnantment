@@ -4,7 +4,13 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"EnchantmentMixin",
-		"AnvilScreenHandlerMixin"
+		"AnvilScreenHandlerMixin",
+		"EnchantmentHelperMixin",
+		"TradeOffersEnchantBookFactoryMixin",
+		"ChestLootEnchantmentMixin",
+		"ItemEnchantmentsComponentMixin",
+		"ItemEnchantmentsComponentBuilderMixin",
+		"EnchantCommandMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

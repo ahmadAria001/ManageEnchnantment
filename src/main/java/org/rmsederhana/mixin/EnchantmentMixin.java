@@ -1,5 +1,7 @@
 package org.rmsederhana.mixin;
 
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.screen.ScreenTexts;
@@ -8,12 +10,13 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.rmsederhana.enchantment.EnchantmentOverrideManager;
+import org.rmsederhana.enchantment.OverrideState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import net.minecraft.enchantment.Enchantment;
 
 /**
  * Mixin to override the max level of enchantments based on configuration.
@@ -25,8 +28,12 @@ import net.minecraft.enchantment.Enchantment;
 @Mixin(Enchantment.class)
 public class EnchantmentMixin {
 
-    @Inject(method = "getMaxLevel", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getMaxLevel", at = @At("HEAD"), cancellable = true)
     private void manageenchantment$overrideMaxLevel(CallbackInfoReturnable<Integer> cir) {
+        if (OverrideState.BYPASS_OVERRIDE.get()) {
+            return;
+        }
+
         Enchantment self = (Enchantment) (Object) this;
         Integer configuredLevel = EnchantmentOverrideManager.getMaxLevel(self);
         if (configuredLevel != null) {

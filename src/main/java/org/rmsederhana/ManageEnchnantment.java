@@ -1,7 +1,9 @@
 package org.rmsederhana;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import org.rmsederhana.command.TestTradesCommand;
 import org.rmsederhana.config.ConfigManager;
 import org.rmsederhana.enchantment.EnchantmentOverrideManager;
 import org.slf4j.Logger;
@@ -21,6 +23,9 @@ public class ManageEnchnantment implements ModInitializer {
 
 		// Load configuration from TOML file (generates defaults on first run)
 		ConfigManager.load();
+
+		// Register commands
+		CommandRegistrationCallback.EVENT.register(TestTradesCommand::register);
 
 		// Apply enchantment overrides when the server starts
 		// At this point the dynamic registry (including enchantments) is loaded

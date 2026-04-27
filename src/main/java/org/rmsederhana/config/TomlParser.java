@@ -142,4 +142,16 @@ public class TomlParser {
         }
         return defaultValue;
     }
+
+    /**
+     * Helper to get a string from the parsed map with a default value.
+     */
+    public static String getString(Map<String, Object> section, String key, String defaultValue) {
+        if (section == null) return defaultValue;
+        Object val = section.get(key);
+        if (val instanceof String s) {
+            return s;
+        }
+        return defaultValue;
+    }
 }

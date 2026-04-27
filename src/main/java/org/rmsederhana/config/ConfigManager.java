@@ -30,6 +30,17 @@ public class ConfigManager {
     private static boolean capActualCost = false;
     private static boolean disablePriorWorkPenalty = false;
 
+    // Enchanting Table settings
+    private static boolean removeBookshelfCap = true;
+
+    // Villager Trade settings
+    private static String defaultCapStrategy = "vanilla";
+    private static final Map<String, Integer> villagerTradeOverrides = new LinkedHashMap<>();
+
+    // Chest Loot settings
+    private static String chestLootDefaultCapStrategy = "vanilla";
+    private static final Map<String, Integer> chestLootOverrides = new LinkedHashMap<>();
+
     // Per-enchantment max level overrides (key = enchantment path, e.g. "sharpness")
     private static final Map<String, Integer> enchantmentOverrides = new LinkedHashMap<>();
 
@@ -125,6 +136,38 @@ public class ConfigManager {
             capActualCost = TomlParser.getBoolean(anvil, "cap_actual_cost", false);
             disablePriorWorkPenalty = TomlParser.getBoolean(anvil, "disable_prior_work_penalty", false);
 
+            // Parse [enchanting_table]
+            Map<String, Object> enchantingTable = toml.get("enchanting_table");
+            removeBookshelfCap = TomlParser.getBoolean(enchantingTable, "remove_bookshelf_cap", true);
+
+            // Parse [villager_trades]
+            Map<String, Object> villagerTrades = toml.get("villager_trades");
+            defaultCapStrategy = TomlParser.getString(villagerTrades, "default_cap_strategy", "vanilla");
+            
+            villagerTradeOverrides.clear();
+            Map<String, Object> overrides = toml.get("villager_trades.overrides");
+            if (overrides != null) {
+                for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+                    if (entry.getValue() instanceof Number) {
+                        villagerTradeOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                    }
+                }
+            }
+
+            // Parse [chest_loot]
+            Map<String, Object> chestLoot = toml.get("chest_loot");
+            chestLootDefaultCapStrategy = TomlParser.getString(chestLoot, "default_cap_strategy", "vanilla");
+            
+            chestLootOverrides.clear();
+            Map<String, Object> chestOverrides = toml.get("chest_loot.overrides");
+            if (chestOverrides != null) {
+                for (Map.Entry<String, Object> entry : chestOverrides.entrySet()) {
+                    if (entry.getValue() instanceof Number) {
+                        chestLootOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                    }
+                }
+            }
+
             // Parse [enchantments]
             Map<String, Object> enchantments = toml.get("enchantments");
             enchantmentOverrides.clear();
@@ -206,6 +249,31 @@ public class ConfigManager {
         return disablePriorWorkPenalty;
     }
 
+    public static String getChestLootDefaultCapStrategy() {
+        return chestLootDefaultCapStrategy;
+    }
+
+    public static int getChestLootLimit(String enchantmentPath) {
+        return chestLootOverrides.getOrDefault(enchantmentPath, -1);
+    }
+
+    public static boolean isBookshelfCapRemoved() {
+        return removeBookshelfCap;
+    }
+
+    public static String getDefaultCapStrategy() {
+        return defaultCapStrategy;
+    }
+
+    /**
+     * Gets the villager trade limit for an enchantment.
+     * @param path The enchantment path (e.g. "sharpness")
+     * @return The exact limit, or -1 if no override is set. (0 or less means banned).
+     */
+    public static int getVillagerTradeLimit(String path) {
+        return villagerTradeOverrides.getOrDefault(path, -1);
+    }
+
     public static int getGlobalMaxLevelMultiplier() {
         return globalMaxLevelMultiplier;
     }
@@ -253,6 +321,36 @@ public class ConfigManager {
         sb.append("\n");
         sb.append("# If true, disables the vanilla mechanic where items get twice as expensive every time they are repaired or combined.\n");
         sb.append("disable_prior_work_penalty = false\n");
+        sb.append("\n");
+        sb.append("[enchanting_table]\n");
+        sb.append("# Vanilla Minecraft hardcaps the number of valid bookshelves to 15 when calculating enchantment power.\n");
+        sb.append("# If true, this cap is removed, allowing massive libraries to generate enchantments far beyond vanilla limits.\n");
+        sb.append("remove_bookshelf_cap = true\n");
+        sb.append("\n");
+        sb.append("[villager_trades]\n");
+        sb.append("# How should villager trades be capped by default if not specified below?\n");
+        sb.append("# \"vanilla\" = limit to the original vanilla max level\n");
+        sb.append("# \"uncapped\" = allow the villager to trade the globally overridden max level\n");
+        sb.append("default_cap_strategy = \"vanilla\"\n");
+        sb.append("\n");
+        sb.append("[villager_trades.overrides]\n");
+        sb.append("# Set a specific max level a villager is allowed to trade.\n");
+        sb.append("# Set to 0 to completely BAN the enchantment from villager trades.\n");
+        sb.append("# Examples:\n");
+        sb.append("# mending = 0\n");
+        sb.append("# sharpness = 5\n");
+        sb.append("\n");
+        sb.append("[chest_loot]\n");
+        sb.append("# How should chest loot enchantments be capped by default?\n");
+        sb.append("# \"vanilla\" = limit to the original vanilla max level\n");
+        sb.append("# \"uncapped\" = allow chest loot to generate up to the globally overridden max level\n");
+        sb.append("default_cap_strategy = \"vanilla\"\n");
+        sb.append("\n");
+        sb.append("[chest_loot.overrides]\n");
+        sb.append("# Set a specific max level allowed for enchantments found in chest loot.\n");
+        sb.append("# Set to 0 to completely BAN the enchantment from generating in chests.\n");
+        sb.append("# Examples:\n");
+        sb.append("# sharpness = 5\n");
         sb.append("\n");
         sb.append("[enchantments]\n");
         sb.append("# Per-enchantment max level overrides.\n");
