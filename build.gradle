@@ -1,6 +1,7 @@
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
+	id "com.modrinth.minotaur" version "2.9.0"
 }
 
 version = project.mod_version
@@ -84,4 +85,19 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN") // Gets token from your environment variables
+    projectId = "manageenchnantment"           // Your project ID or slug
+    versionNumber = project.version         // Uses the version defined in gradle.properties
+    versionType = "release"                 // Can be "release", "beta", or "alpha"
+    uploadFile = remapJar                   // Fabric Loom specific: use remapJar, not jar!
+    gameVersions = ["1.21.11"]       // The Minecraft versions your mod supports
+    loaders = ["fabric"]                    // The mod loaders you support
+    
+    // Optional: Auto-detect dependencies from your fabric.mod.json
+    dependencies {
+        // required.project "fabric-api"
+    }
 }
