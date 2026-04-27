@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "org.rmsederhana.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"EnchantmentMixin",
+		"AnvilScreenHandlerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

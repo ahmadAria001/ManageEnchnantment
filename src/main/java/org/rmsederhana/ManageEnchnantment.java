@@ -1,0 +1,40 @@
+package org.rmsederhana;
+
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import org.rmsederhana.config.ConfigManager;
+import org.rmsederhana.enchantment.EnchantmentOverrideManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ManageEnchnantment implements ModInitializer {
+	public static final String MOD_ID = "manageenchnantment";
+
+	// This logger is used to write text to the console and the log file.
+	// It is considered best practice to use your mod id as the logger's name.
+	// That way, it's clear which mod wrote info, warnings, and errors.
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+	@Override
+	public void onInitialize() {
+		LOGGER.info("[ManageEnchantment] Initializing...");
+
+		// Load configuration from TOML file (generates defaults on first run)
+		ConfigManager.load();
+
+		// Apply enchantment overrides when the server starts
+		// At this point the dynamic registry (including enchantments) is loaded
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			EnchantmentOverrideManager.applyOverrides(server);
+			LOGGER.info("[ManageEnchantment] Enchantment overrides applied.");
+		});
+
+		// Clean up overrides when the server stops
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			EnchantmentOverrideManager.clearOverrides();
+			LOGGER.info("[ManageEnchantment] Enchantment overrides cleared.");
+		});
+
+		LOGGER.info("[ManageEnchantment] Initialized successfully.");
+	}
+}

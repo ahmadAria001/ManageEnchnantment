@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "manageenchnantment",
+	"version": "${version}",
+	"name": "ManageEnchantment",
+	"description": "Allows all enchantments to exceed their vanilla maximum level with configurable per-enchantment and global multiplier settings. Removes anvil level caps.",
+	"authors": [
+		"rmsederhana"
+	],
+	"contact": {},
+	"license": "CC0-1.0",
+	"icon": "assets/manageenchnantment/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"org.rmsederhana.ManageEnchnantment"
+		],
+		"client": [
+			"org.rmsederhana.client.ManageEnchnantmentClient"
+		]
+	},
+	"mixins": [
+		"manageenchnantment.mixins.json",
+		{
+			"config": "manageenchnantment.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
