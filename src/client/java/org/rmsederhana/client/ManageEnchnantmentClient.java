@@ -5,6 +5,8 @@ import net.fabricmc.api.ClientModInitializer;
 public class ManageEnchnantmentClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+			org.rmsederhana.tier.TierManager.reload();
+		});
 	}
 }

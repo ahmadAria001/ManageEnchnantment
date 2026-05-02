@@ -32,7 +32,12 @@ public class TradeOffersEnchantBookFactoryMixin {
         Iterable<RegistryEntry<Enchantment>> entries = registry.iterateEntries(tag);
         List<RegistryEntry<Enchantment>> validEntries = new ArrayList<>();
         
+        boolean banCurses = ConfigManager.isBanCursesFromVillagerTrades();
         for (RegistryEntry<Enchantment> entry : entries) {
+            if (banCurses && entry.isIn(net.minecraft.registry.tag.EnchantmentTags.CURSE)) {
+                continue;
+            }
+            
             String path = EnchantmentOverrideManager.getPath(entry.value());
             if (path != null) {
                 int limit = ConfigManager.getVillagerTradeLimit(path);

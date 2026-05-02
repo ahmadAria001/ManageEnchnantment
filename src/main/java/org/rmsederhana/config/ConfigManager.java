@@ -6,433 +6,231 @@ import org.rmsederhana.ManageEnchnantment;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-/**
- * Manages the mod configuration loaded from a TOML file.
- * 
- * Configuration priority for max levels:
- *   1. Per-enchantment override (if not -1)
- *   2. Vanilla max level × global multiplier
- */
 public class ConfigManager {
 
     private static final String CONFIG_FILE_NAME = "manageenchantment.toml";
-
-    // General settings
+    
     private static int globalMaxLevelMultiplier = 2;
-
-    // Anvil settings
+    private static boolean bypassIncompatibleEnchantments = false;
     private static boolean removeAnvilCap = true;
     private static int maxAnvilCost = 0;
     private static double discountMultiplier = 1.0;
     private static boolean capActualCost = false;
     private static boolean disablePriorWorkPenalty = false;
-
-    // Enchanting Table settings
     private static boolean removeBookshelfCap = true;
+    private static double grindstoneXpMultiplier = 1.0;
+    private static int grindstoneXpCap = 0;
+    private static boolean banCursesFromEnchantingTable = false;
+    private static boolean banCursesFromVillagerTrades = false;
+    private static boolean banCursesFromChestLoot = false;
+    private static String defaultVillagerCapStrategy = "vanilla";
+    private static String defaultChestLootCapStrategy = "vanilla";
+    private static boolean enableMaterialTiers = true;
 
-    // Villager Trade settings
-    private static String defaultCapStrategy = "vanilla";
-    private static final Map<String, Integer> villagerTradeOverrides = new LinkedHashMap<>();
+    private static final Map<String, Integer> villagerOverrides = new HashMap<>();
+    private static final Map<String, Integer> chestLootOverrides = new HashMap<>();
+    private static final Map<Integer, List<String>> materialTiers = new TreeMap<>();
+    private static final Map<String, List<String>> anvilCategories = new HashMap<>();
+    private static final Map<String, Integer> enchantmentOverrides = new HashMap<>();
 
-    // Chest Loot settings
-    private static String chestLootDefaultCapStrategy = "vanilla";
-    private static final Map<String, Integer> chestLootOverrides = new LinkedHashMap<>();
+    // Existing mod expectations
+    public static boolean isAnvilCapRemoved() { return removeAnvilCap; }
+    public static int getMaxAnvilCost() { return maxAnvilCost; }
+    public static double getDiscountMultiplier() { return discountMultiplier; }
+    public static boolean isActualCostCapped() { return capActualCost; }
+    public static boolean isPriorWorkPenaltyDisabled() { return disablePriorWorkPenalty; }
+    public static boolean isBookshelfCapRemoved() { return removeBookshelfCap; }
+    public static double getGrindstoneXpMultiplier() { return grindstoneXpMultiplier; }
+    public static int getGrindstoneXpCap() { return grindstoneXpCap; }
+    public static boolean isBanCursesFromEnchantingTable() { return banCursesFromEnchantingTable; }
+    public static boolean isBanCursesFromVillagerTrades() { return banCursesFromVillagerTrades; }
+    public static boolean isBanCursesFromChestLoot() { return banCursesFromChestLoot; }
+    public static boolean isIncompatibleBypassEnabled() { return bypassIncompatibleEnchantments; }
+    public static String getDefaultCapStrategy() { return defaultVillagerCapStrategy; }
+    public static String getChestLootDefaultCapStrategy() { return defaultChestLootCapStrategy; }
+    public static boolean isMaterialTiersEnabled() { return enableMaterialTiers; }
 
-    // Per-enchantment max level overrides (key = enchantment path, e.g. "sharpness")
-    private static final Map<String, Integer> enchantmentOverrides = new LinkedHashMap<>();
-
-    // All vanilla enchantments with their vanilla max levels (for default config generation)
-    private static final Map<String, Integer> VANILLA_DEFAULTS = new LinkedHashMap<>();
-
-    static {
-        // Max Level V
-        VANILLA_DEFAULTS.put("sharpness", 5);
-        VANILLA_DEFAULTS.put("smite", 5);
-        VANILLA_DEFAULTS.put("bane_of_arthropods", 5);
-        VANILLA_DEFAULTS.put("efficiency", 5);
-        VANILLA_DEFAULTS.put("power", 5);
-        VANILLA_DEFAULTS.put("impaling", 5);
-        VANILLA_DEFAULTS.put("density", 5);
-
-        // Max Level IV
-        VANILLA_DEFAULTS.put("protection", 4);
-        VANILLA_DEFAULTS.put("fire_protection", 4);
-        VANILLA_DEFAULTS.put("blast_protection", 4);
-        VANILLA_DEFAULTS.put("projectile_protection", 4);
-        VANILLA_DEFAULTS.put("feather_falling", 4);
-        VANILLA_DEFAULTS.put("piercing", 4);
-        VANILLA_DEFAULTS.put("breach", 4);
-
-        // Max Level III
-        VANILLA_DEFAULTS.put("unbreaking", 3);
-        VANILLA_DEFAULTS.put("fortune", 3);
-        VANILLA_DEFAULTS.put("looting", 3);
-        VANILLA_DEFAULTS.put("depth_strider", 3);
-        VANILLA_DEFAULTS.put("respiration", 3);
-        VANILLA_DEFAULTS.put("loyalty", 3);
-        VANILLA_DEFAULTS.put("riptide", 3);
-        VANILLA_DEFAULTS.put("luck_of_the_sea", 3);
-        VANILLA_DEFAULTS.put("lure", 3);
-        VANILLA_DEFAULTS.put("quick_charge", 3);
-        VANILLA_DEFAULTS.put("soul_speed", 3);
-        VANILLA_DEFAULTS.put("swift_sneak", 3);
-        VANILLA_DEFAULTS.put("thorns", 3);
-        VANILLA_DEFAULTS.put("sweeping_edge", 3);
-        VANILLA_DEFAULTS.put("wind_burst", 3);
-
-        // Max Level II
-        VANILLA_DEFAULTS.put("knockback", 2);
-        VANILLA_DEFAULTS.put("fire_aspect", 2);
-        VANILLA_DEFAULTS.put("punch", 2);
-        VANILLA_DEFAULTS.put("frost_walker", 2);
-
-        // Max Level I
-        VANILLA_DEFAULTS.put("silk_touch", 1);
-        VANILLA_DEFAULTS.put("aqua_affinity", 1);
-        VANILLA_DEFAULTS.put("flame", 1);
-        VANILLA_DEFAULTS.put("infinity", 1);
-        VANILLA_DEFAULTS.put("channeling", 1);
-        VANILLA_DEFAULTS.put("multishot", 1);
-        VANILLA_DEFAULTS.put("mending", 1);
-        VANILLA_DEFAULTS.put("binding_curse", 1);
-        VANILLA_DEFAULTS.put("vanishing_curse", 1);
+    public static int getVillagerTradeLimit(String enchantId) {
+        return villagerOverrides.getOrDefault(enchantId, -1);
     }
 
-    /**
-     * Load configuration from file, or generate defaults if not present.
-     */
+    public static int getChestLootLimit(String enchantId) {
+        return chestLootOverrides.getOrDefault(enchantId, -1);
+    }
+
+    public static int getConfiguredMaxLevel(String fullId, String path, int vanillaMax) {
+        int override = enchantmentOverrides.getOrDefault(path, -1);
+        if (override != -1) return override;
+        return vanillaMax * globalMaxLevelMultiplier;
+    }
+
+    public static Map<Integer, List<String>> getMaterialTiers() { return materialTiers; }
+    public static Map<String, List<String>> getAnvilCategories() { return anvilCategories; }
+
     public static void load() {
         Path configDir = FabricLoader.getInstance().getConfigDir();
         Path configPath = configDir.resolve(CONFIG_FILE_NAME);
 
         if (!Files.exists(configPath)) {
-            generateDefaultConfig(configPath);
-            ManageEnchnantment.LOGGER.info("Generated default config at {}", configPath);
+            generateConfig(configPath);
         }
 
         try {
             Map<String, Map<String, Object>> toml = TomlParser.parse(configPath);
 
-            // Parse [general]
-            Map<String, Object> general = toml.get("general");
-            globalMaxLevelMultiplier = TomlParser.getInt(general, "global_max_level_multiplier", 2);
-
-            if (globalMaxLevelMultiplier < 1) {
-                ManageEnchnantment.LOGGER.warn("global_max_level_multiplier must be >= 1, defaulting to 1");
-                globalMaxLevelMultiplier = 1;
-            }
-
-            // Parse [anvil]
-            Map<String, Object> anvil = toml.get("anvil");
+            Map<String, Object> general = toml.get("");
+            if (toml.containsKey("general")) general = toml.get("general");
             
-            // Backwards compatibility: check general if not in anvil
+            globalMaxLevelMultiplier = TomlParser.getInt(general, "global_max_level_multiplier", 2);
+            bypassIncompatibleEnchantments = TomlParser.getBoolean(general, "bypass_incompatible_enchantments", false);
+
+            Map<String, Object> anvil = toml.get("anvil");
             removeAnvilCap = TomlParser.getBoolean(anvil != null ? anvil : general, "remove_anvil_cap", true);
             maxAnvilCost = TomlParser.getInt(anvil != null ? anvil : general, "max_anvil_cost", 0);
-            
-            discountMultiplier = TomlParser.getDouble(anvil, "discount_multiplier", 1.0);
-            capActualCost = TomlParser.getBoolean(anvil, "cap_actual_cost", false);
-            disablePriorWorkPenalty = TomlParser.getBoolean(anvil, "disable_prior_work_penalty", false);
+            discountMultiplier = TomlParser.getDouble(anvil != null ? anvil : general, "discount_multiplier", 1.0);
+            capActualCost = TomlParser.getBoolean(anvil != null ? anvil : general, "cap_actual_cost", false);
+            disablePriorWorkPenalty = TomlParser.getBoolean(anvil != null ? anvil : general, "disable_prior_work_penalty", false);
 
-            // Parse [enchanting_table]
-            Map<String, Object> enchantingTable = toml.get("enchanting_table");
-            removeBookshelfCap = TomlParser.getBoolean(enchantingTable, "remove_bookshelf_cap", true);
+            Map<String, Object> table = toml.get("enchanting_table");
+            removeBookshelfCap = TomlParser.getBoolean(table != null ? table : general, "remove_bookshelf_cap", true);
 
-            // Parse [villager_trades]
-            Map<String, Object> villagerTrades = toml.get("villager_trades");
-            defaultCapStrategy = TomlParser.getString(villagerTrades, "default_cap_strategy", "vanilla");
-            
-            villagerTradeOverrides.clear();
-            Map<String, Object> overrides = toml.get("villager_trades.overrides");
-            if (overrides != null) {
-                for (Map.Entry<String, Object> entry : overrides.entrySet()) {
-                    if (entry.getValue() instanceof Number) {
-                        villagerTradeOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
-                    }
+            Map<String, Object> grindstone = toml.get("grindstone");
+            grindstoneXpMultiplier = TomlParser.getDouble(grindstone != null ? grindstone : general, "grindstone_xp_multiplier", 1.0);
+            grindstoneXpCap = TomlParser.getInt(grindstone != null ? grindstone : general, "grindstone_xp_cap", 0);
+
+            Map<String, Object> curses = toml.get("curses");
+            banCursesFromEnchantingTable = TomlParser.getBoolean(curses != null ? curses : general, "ban_from_enchanting_table", false);
+            banCursesFromVillagerTrades = TomlParser.getBoolean(curses != null ? curses : general, "ban_from_villager_trades", false);
+            banCursesFromChestLoot = TomlParser.getBoolean(curses != null ? curses : general, "ban_from_chest_loot", false);
+
+            Map<String, Object> villager = toml.get("villager_trades");
+            defaultVillagerCapStrategy = TomlParser.getString(villager != null ? villager : general, "default_cap_strategy", "vanilla");
+            villagerOverrides.clear();
+            Map<String, Object> vOverrides = toml.get("villager_trades.overrides");
+            if (vOverrides != null) {
+                for (Map.Entry<String, Object> entry : vOverrides.entrySet()) {
+                    if (entry.getValue() instanceof Number) villagerOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
                 }
             }
 
-            // Parse [chest_loot]
-            Map<String, Object> chestLoot = toml.get("chest_loot");
-            chestLootDefaultCapStrategy = TomlParser.getString(chestLoot, "default_cap_strategy", "vanilla");
-            
+            Map<String, Object> chest = toml.get("chest_loot");
+            defaultChestLootCapStrategy = TomlParser.getString(chest != null ? chest : general, "default_cap_strategy", "vanilla");
             chestLootOverrides.clear();
-            Map<String, Object> chestOverrides = toml.get("chest_loot.overrides");
-            if (chestOverrides != null) {
-                for (Map.Entry<String, Object> entry : chestOverrides.entrySet()) {
-                    if (entry.getValue() instanceof Number) {
-                        chestLootOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+            Map<String, Object> cOverrides = toml.get("chest_loot.overrides");
+            if (cOverrides != null) {
+                for (Map.Entry<String, Object> entry : cOverrides.entrySet()) {
+                    if (entry.getValue() instanceof Number) chestLootOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                }
+            }
+
+            Map<String, Object> tiers = toml.get("material_tiers");
+            enableMaterialTiers = TomlParser.getBoolean(tiers != null ? tiers : general, "enable_material_tiers", true);
+            materialTiers.clear();
+            if (tiers != null) {
+                for (Map.Entry<String, Object> entry : tiers.entrySet()) {
+                    try {
+                        int level = Integer.parseInt(entry.getKey());
+                        if (entry.getValue() instanceof List) {
+                            List<String> list = new ArrayList<>();
+                            for (Object o : (List<?>) entry.getValue()) list.add(o.toString());
+                            materialTiers.put(level, list);
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            Map<String, Object> categories = toml.get("anvil_categories");
+            anvilCategories.clear();
+            if (categories != null) {
+                for (Map.Entry<String, Object> entry : categories.entrySet()) {
+                    if (entry.getValue() instanceof List) {
+                        List<String> list = new ArrayList<>();
+                        for (Object o : (List<?>) entry.getValue()) list.add(o.toString());
+                        anvilCategories.put(entry.getKey(), list);
                     }
                 }
             }
 
-            // Parse [enchantments]
-            Map<String, Object> enchantments = toml.get("enchantments");
+            Map<String, Object> enchants = toml.get("enchantments");
             enchantmentOverrides.clear();
-            if (enchantments != null) {
-                for (Map.Entry<String, Object> entry : enchantments.entrySet()) {
-                    String key = entry.getKey().trim();
-                    if (entry.getValue() instanceof Number num) {
-                        enchantmentOverrides.put(key, num.intValue());
-                    }
+            if (enchants != null) {
+                for (Map.Entry<String, Object> entry : enchants.entrySet()) {
+                    if (entry.getValue() instanceof Number) enchantmentOverrides.put(entry.getKey(), ((Number) entry.getValue()).intValue());
                 }
             }
 
-            ManageEnchnantment.LOGGER.info("Config loaded: multiplier={}, anvil_cap_removed={}, {} enchantment overrides",
-                    globalMaxLevelMultiplier, removeAnvilCap, enchantmentOverrides.size());
+            org.rmsederhana.tier.TierManager.reload();
 
-        } catch (IOException e) {
-            ManageEnchnantment.LOGGER.error("Failed to load config, using defaults", e);
+        } catch (Exception e) {
+            ManageEnchnantment.LOGGER.error("Failed to load config: {}", e.getMessage());
         }
     }
 
-    /**
-     * Get the configured max level for an enchantment.
-     * 
-     * @param enchantmentId The full enchantment ID (e.g., "minecraft:sharpness" or "enchantplus:mace/striker")
-     * @param enchantmentPath The enchantment's path (e.g., "sharpness" or "mace/striker")
-     * @param vanillaMaxLevel The vanilla default max level
-     * @return The configured max level, or -1 if no override is set
-     */
-    public static int getConfiguredMaxLevel(String enchantmentId, String enchantmentPath, int vanillaMaxLevel) {
-        // Priority 1: Per-enchantment override using full ID
-        Integer override = enchantmentOverrides.get(enchantmentId);
-        if (override != null && override != -1) {
-            return override;
-        }
-
-        // Priority 2: Per-enchantment override using just path (for vanilla convenience)
-        override = enchantmentOverrides.get(enchantmentPath);
-        if (override != null && override != -1) {
-            return override;
-        }
-
-        // Priority 3: Global multiplier
-        if (globalMaxLevelMultiplier > 1) {
-            return vanillaMaxLevel * globalMaxLevelMultiplier;
-        }
-
-        // No override - return vanilla default
-        return vanillaMaxLevel;
-    }
-
-    /**
-     * Check if an enchantment path has any override configured (either individual or global).
-     */
-    public static boolean hasOverride(String enchantmentPath) {
-        Integer override = enchantmentOverrides.get(enchantmentPath);
-        if (override != null && override != -1) {
-            return true;
-        }
-        return globalMaxLevelMultiplier > 1;
-    }
-
-    public static boolean isAnvilCapRemoved() {
-        return removeAnvilCap;
-    }
-
-    public static int getMaxAnvilCost() {
-        return maxAnvilCost;
-    }
-
-    public static double getDiscountMultiplier() {
-        return discountMultiplier;
-    }
-
-    public static boolean isActualCostCapped() {
-        return capActualCost;
-    }
-
-    public static boolean isPriorWorkPenaltyDisabled() {
-        return disablePriorWorkPenalty;
-    }
-
-    public static String getChestLootDefaultCapStrategy() {
-        return chestLootDefaultCapStrategy;
-    }
-
-    public static int getChestLootLimit(String enchantmentPath) {
-        return chestLootOverrides.getOrDefault(enchantmentPath, -1);
-    }
-
-    public static boolean isBookshelfCapRemoved() {
-        return removeBookshelfCap;
-    }
-
-    public static String getDefaultCapStrategy() {
-        return defaultCapStrategy;
-    }
-
-    /**
-     * Gets the villager trade limit for an enchantment.
-     * @param path The enchantment path (e.g. "sharpness")
-     * @return The exact limit, or -1 if no override is set. (0 or less means banned).
-     */
-    public static int getVillagerTradeLimit(String path) {
-        return villagerTradeOverrides.getOrDefault(path, -1);
-    }
-
-    public static int getGlobalMaxLevelMultiplier() {
-        return globalMaxLevelMultiplier;
-    }
-
-    public static Map<String, Integer> getEnchantmentOverrides() {
-        return Map.copyOf(enchantmentOverrides);
-    }
-
-    public static Map<String, Integer> getVanillaDefaults() {
-        return Map.copyOf(VANILLA_DEFAULTS);
-    }
-
-    /**
-     * Generates the default configuration file with all vanilla enchantments documented.
-     */
-    private static void generateDefaultConfig(Path configPath) {
+    private static void generateConfig(Path path) {
         StringBuilder sb = new StringBuilder();
-        sb.append("# ============================================================\n");
-        sb.append("# ManageEnchantment Configuration\n");
-        sb.append("# ============================================================\n");
-        sb.append("# This mod allows all enchantments to exceed their vanilla\n");
-        sb.append("# maximum level. Configure levels below.\n");
-        sb.append("# Server restart required after changes.\n");
-        sb.append("# ============================================================\n");
-        sb.append("\n");
+        sb.append("# ManageEnchantment Configuration\n\n");
+
         sb.append("[general]\n");
-        sb.append("# Global multiplier for ALL enchantment max levels.\n");
-        sb.append("# Applied when an enchantment has no individual override (or is set to -1).\n");
-        sb.append("# Example: multiplier=2 means Sharpness max becomes 10 (5 x 2)\n");
-        sb.append("# Set to 1 to disable global scaling.\n");
-        sb.append("global_max_level_multiplier = 2\n");
-        sb.append("\n");
+        sb.append("global_max_level_multiplier = ").append(globalMaxLevelMultiplier).append("\n");
+        sb.append("bypass_incompatible_enchantments = ").append(bypassIncompatibleEnchantments).append("\n\n");
+
         sb.append("[anvil]\n");
-        sb.append("# Remove the \"Too Expensive!\" anvil cap (vanilla: 40 levels)\n");
-        sb.append("remove_anvil_cap = true\n");
-        sb.append("\n");
-        sb.append("# Maximum anvil XP cost allowed. Used as the cap threshold (0 = unlimited)\n");
-        sb.append("max_anvil_cost = 0\n");
-        sb.append("\n");
-        sb.append("# Multiplier applied to the final anvil XP cost (e.g. 0.5 = half cost)\n");
-        sb.append("discount_multiplier = 1.0\n");
-        sb.append("\n");
-        sb.append("# If true, the actual XP deducted from the player will never exceed max_anvil_cost.\n");
-        sb.append("cap_actual_cost = false\n");
-        sb.append("\n");
-        sb.append("# If true, disables the vanilla mechanic where items get twice as expensive every time they are repaired or combined.\n");
-        sb.append("disable_prior_work_penalty = false\n");
-        sb.append("\n");
+        sb.append("remove_anvil_cap = ").append(removeAnvilCap).append("\n");
+        sb.append("max_anvil_cost = ").append(maxAnvilCost).append("\n");
+        sb.append("discount_multiplier = ").append(discountMultiplier).append("\n");
+        sb.append("cap_actual_cost = ").append(capActualCost).append("\n");
+        sb.append("disable_prior_work_penalty = ").append(disablePriorWorkPenalty).append("\n\n");
+
         sb.append("[enchanting_table]\n");
-        sb.append("# Vanilla Minecraft hardcaps the number of valid bookshelves to 15 when calculating enchantment power.\n");
-        sb.append("# If true, this cap is removed, allowing massive libraries to generate enchantments far beyond vanilla limits.\n");
-        sb.append("remove_bookshelf_cap = true\n");
-        sb.append("\n");
-        sb.append("[villager_trades]\n");
-        sb.append("# How should villager trades be capped by default if not specified below?\n");
-        sb.append("# \"vanilla\" = limit to the original vanilla max level\n");
-        sb.append("# \"uncapped\" = allow the villager to trade the globally overridden max level\n");
-        sb.append("default_cap_strategy = \"vanilla\"\n");
-        sb.append("\n");
-        sb.append("[villager_trades.overrides]\n");
-        sb.append("# Set a specific max level a villager is allowed to trade.\n");
-        sb.append("# Set to 0 to completely BAN the enchantment from villager trades.\n");
-        sb.append("# Examples:\n");
-        sb.append("# mending = 0\n");
-        sb.append("# sharpness = 5\n");
-        sb.append("\n");
-        sb.append("[chest_loot]\n");
-        sb.append("# How should chest loot enchantments be capped by default?\n");
-        sb.append("# \"vanilla\" = limit to the original vanilla max level\n");
-        sb.append("# \"uncapped\" = allow chest loot to generate up to the globally overridden max level\n");
-        sb.append("default_cap_strategy = \"vanilla\"\n");
-        sb.append("\n");
-        sb.append("[chest_loot.overrides]\n");
-        sb.append("# Set a specific max level allowed for enchantments found in chest loot.\n");
-        sb.append("# Set to 0 to completely BAN the enchantment from generating in chests.\n");
-        sb.append("# Examples:\n");
-        sb.append("# sharpness = 5\n");
-        sb.append("\n");
+        sb.append("remove_bookshelf_cap = ").append(removeBookshelfCap).append("\n\n");
+
+        sb.append("[grindstone]\n");
+        sb.append("grindstone_xp_multiplier = ").append(grindstoneXpMultiplier).append("\n");
+        sb.append("grindstone_xp_cap = ").append(grindstoneXpCap).append("\n\n");
+
+        sb.append("[curses]\n");
+        sb.append("ban_from_enchanting_table = ").append(banCursesFromEnchantingTable).append("\n");
+        sb.append("ban_from_villager_trades = ").append(banCursesFromVillagerTrades).append("\n");
+        sb.append("ban_from_chest_loot = ").append(banCursesFromChestLoot).append("\n\n");
+
+        sb.append("[material_tiers]\n");
+        sb.append("enable_material_tiers = ").append(enableMaterialTiers).append("\n\n");
+        
+        sb.append("1 = [\"minecraft:wooden_sword\", \"minecraft:wooden_pickaxe\", \"minecraft:wooden_axe\", \"minecraft:wooden_shovel\", \"minecraft:wooden_hoe\", ");
+        sb.append("\"minecraft:stone_sword\", \"minecraft:stone_pickaxe\", \"minecraft:stone_axe\", \"minecraft:stone_shovel\", \"minecraft:stone_hoe\", ");
+        sb.append("\"#minecraft:leather_armor\"]\n");
+
+        sb.append("2 = [\"minecraft:iron_sword\", \"minecraft:iron_pickaxe\", \"minecraft:iron_axe\", \"minecraft:iron_shovel\", \"minecraft:iron_hoe\", ");
+        sb.append("\"minecraft:golden_sword\", \"minecraft:golden_pickaxe\", \"minecraft:golden_axe\", \"minecraft:golden_shovel\", \"minecraft:golden_hoe\", ");
+        sb.append("\"#minecraft:iron_armor\", \"#minecraft:golden_armor\", \"#minecraft:chainmail_armor\"]\n");
+
+        sb.append("3 = [\"minecraft:diamond_sword\", \"minecraft:diamond_pickaxe\", \"minecraft:diamond_axe\", \"minecraft:diamond_shovel\", \"minecraft:diamond_hoe\", ");
+        sb.append("\"#minecraft:diamond_armor\"]\n");
+
+        sb.append("4 = [\"minecraft:netherite_sword\", \"minecraft:netherite_pickaxe\", \"minecraft:netherite_axe\", \"minecraft:netherite_shovel\", \"minecraft:netherite_hoe\", ");
+        sb.append("\"#minecraft:netherite_armor\", \"minecraft:elytra\", \"minecraft:trident\"]\n\n");
+
+        sb.append("[anvil_categories]\n");
+        sb.append("swords = [\"#minecraft:swords\"]\n");
+        sb.append("pickaxes = [\"#minecraft:pickaxes\"]\n");
+        sb.append("axes = [\"#minecraft:axes\"]\n");
+        sb.append("shovels = [\"#minecraft:shovels\"]\n");
+        sb.append("hoes = [\"#minecraft:hoes\"]\n");
+        sb.append("helmets = [\"#minecraft:helmets\"]\n");
+        sb.append("chestplates = [\"#minecraft:chestplates\"]\n");
+        sb.append("leggings = [\"#minecraft:leggings\"]\n");
+        sb.append("boots = [\"#minecraft:boots\"]\n\n");
+
         sb.append("[enchantments]\n");
-        sb.append("# Per-enchantment max level overrides.\n");
-        sb.append("# Set to -1 to use the global multiplier instead.\n");
-        sb.append("# Individual values take priority over the global multiplier.\n");
-        sb.append("#\n");
-        sb.append("# Format: enchantment_name = max_level\n");
-        sb.append("# Vanilla max levels shown in comments for reference.\n");
-        sb.append("\n");
-
-        sb.append("# --- Damage Enchantments (Vanilla Max: V) ---\n");
         sb.append("sharpness = -1\n");
-        sb.append("smite = -1\n");
-        sb.append("bane_of_arthropods = -1\n");
-        sb.append("density = -1\n");
-        sb.append("impaling = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Tool Enchantments (Vanilla Max: V) ---\n");
         sb.append("efficiency = -1\n");
-        sb.append("power = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Protection Enchantments (Vanilla Max: IV) ---\n");
-        sb.append("protection = -1\n");
-        sb.append("fire_protection = -1\n");
-        sb.append("blast_protection = -1\n");
-        sb.append("projectile_protection = -1\n");
-        sb.append("feather_falling = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Crossbow Enchantments (Vanilla Max: IV) ---\n");
-        sb.append("piercing = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Mace Enchantments (Vanilla Max: IV) ---\n");
-        sb.append("breach = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Level III Enchantments ---\n");
-        sb.append("unbreaking = -1\n");
-        sb.append("fortune = -1\n");
-        sb.append("looting = -1\n");
-        sb.append("depth_strider = -1\n");
-        sb.append("respiration = -1\n");
-        sb.append("loyalty = -1\n");
-        sb.append("riptide = -1\n");
-        sb.append("luck_of_the_sea = -1\n");
-        sb.append("lure = -1\n");
-        sb.append("quick_charge = -1\n");
-        sb.append("soul_speed = -1\n");
-        sb.append("swift_sneak = -1\n");
-        sb.append("thorns = -1\n");
-        sb.append("sweeping_edge = -1\n");
-        sb.append("wind_burst = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Level II Enchantments ---\n");
-        sb.append("knockback = -1\n");
-        sb.append("fire_aspect = -1\n");
-        sb.append("punch = -1\n");
-        sb.append("frost_walker = -1\n");
-        sb.append("\n");
-
-        sb.append("# --- Level I Enchantments ---\n");
-        sb.append("# These are typically toggle enchantments. Raising their level\n");
-        sb.append("# may not add meaningful effect, but is supported.\n");
-        sb.append("silk_touch = -1\n");
-        sb.append("aqua_affinity = -1\n");
-        sb.append("flame = -1\n");
-        sb.append("infinity = -1\n");
-        sb.append("channeling = -1\n");
-        sb.append("multishot = -1\n");
-        sb.append("mending = -1\n");
-        sb.append("binding_curse = -1\n");
-        sb.append("vanishing_curse = -1\n");
-
+        
         try {
-            Files.createDirectories(configPath.getParent());
-            Files.writeString(configPath, sb.toString());
+            Files.writeString(path, sb.toString());
         } catch (IOException e) {
-            ManageEnchnantment.LOGGER.error("Failed to generate default config", e);
+            ManageEnchnantment.LOGGER.error("Failed to generate default config: {}", e.getMessage());
         }
     }
 }

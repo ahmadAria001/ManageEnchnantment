@@ -10,7 +10,12 @@
 		"ChestLootEnchantmentMixin",
 		"ItemEnchantmentsComponentMixin",
 		"ItemEnchantmentsComponentBuilderMixin",
-		"EnchantCommandMixin"
+		"EnchantCommandMixin",
+		"GrindstoneScreenHandlerMixin",
+		"EnchantmentTierMixin",
+		"EffectiveLevelMixin",
+		"TooltipLevelMixin",
+		"ComponentLevelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

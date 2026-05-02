@@ -15,6 +15,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOffers;
+import org.rmsederhana.config.ConfigManager;
 import org.rmsederhana.enchantment.EnchantmentOverrideManager;
 
 import java.util.HashMap;
@@ -24,6 +25,16 @@ public class TestTradesCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(CommandManager.literal("manageenchantment")
+                .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
+                .then(CommandManager.literal("reload")
+                        .executes(context -> {
+                            ServerCommandSource source = context.getSource();
+                            ConfigManager.load();
+                            EnchantmentOverrideManager.applyOverrides(source.getServer());
+                            source.sendFeedback(() -> Text.literal("§a[ManageEnchantment] Configuration reloaded and overrides applied."), true);
+                            return 1;
+                        })
+                )
                 .then(CommandManager.literal("testtrades")
                         .executes(context -> execute(context.getSource(), 100))
                         .then(CommandManager.argument("amount", IntegerArgumentType.integer(1, 100000))

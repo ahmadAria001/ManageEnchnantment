@@ -1,14 +1,19 @@
 package org.rmsederhana.config;
+import org.rmsederhana.ManageEnchnantment;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Lightweight TOML parser supporting sections, key-value pairs (int, float, boolean, string),
+ * Lightweight TOML parser supporting sections, key-value pairs (int, float, boolean, string, arrays),
  * and comments. No external dependencies.
  */
 public class TomlParser {
@@ -36,6 +41,7 @@ public class TomlParser {
                 // Section header
                 if (line.startsWith("[") && line.endsWith("]")) {
                     currentSection = line.substring(1, line.length() - 1).trim();
+                    ManageEnchnantment.LOGGER.info("[ManageEnchantment] TomlParser: Found section [{}]", currentSection);
                     result.putIfAbsent(currentSection, new LinkedHashMap<>());
                     continue;
                 }
@@ -54,14 +60,22 @@ public class TomlParser {
                     String rawValue = line.substring(eqIndex + 1).trim();
 
                     // Strip inline comments (only if not inside a quoted string)
-                    if (!rawValue.startsWith("\"") && !rawValue.startsWith("'")) {
-                        int commentIndex = rawValue.indexOf('#');
-                        if (commentIndex > 0) {
-                            rawValue = rawValue.substring(0, commentIndex).trim();
+                    int commentIndex = -1;
+                    boolean inQuotes = false;
+                    for (int i = 0; i < rawValue.length(); i++) {
+                        char c = rawValue.charAt(i);
+                        if (c == '\"' || c == '\'') inQuotes = !inQuotes;
+                        if (c == '#' && !inQuotes) {
+                            commentIndex = i;
+                            break;
                         }
+                    }
+                    if (commentIndex >= 0) {
+                        rawValue = rawValue.substring(0, commentIndex).trim();
                     }
 
                     Object value = parseValue(rawValue);
+                    ManageEnchnantment.LOGGER.info("[ManageEnchantment] TomlParser:   {} = {} (type: {})", key, value, value != null ? value.getClass().getSimpleName() : "null");
                     result.computeIfAbsent(currentSection, k -> new LinkedHashMap<>()).put(key, value);
                 }
             }
@@ -102,6 +116,24 @@ public class TomlParser {
         try {
             return Double.parseDouble(raw);
         } catch (NumberFormatException ignored) {}
+
+        // Array [item1, item2]
+        if (raw.startsWith("[") && raw.endsWith("]")) {
+            String content = raw.substring(1, raw.length() - 1).trim();
+            if (content.isEmpty()) return new ArrayList<String>();
+            
+            // This is a simple split, doesn't handle commas inside quotes perfectly but works for item IDs
+            return Arrays.stream(content.split(","))
+                    .map(String::trim)
+                    .map(s -> {
+                        if ((s.startsWith("\"") && s.endsWith("\"")) ||
+                            (s.startsWith("'") && s.endsWith("'"))) {
+                            return s.substring(1, s.length() - 1);
+                        }
+                        return s;
+                    })
+                    .collect(Collectors.toList());
+        }
 
         // Fallback: treat as string
         return raw;

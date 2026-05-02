@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.rmsederhana.config.ConfigManager;
 import org.rmsederhana.enchantment.EnchantmentOverrideManager;
 import org.rmsederhana.enchantment.OverrideState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +39,16 @@ public class EnchantmentMixin {
         Integer configuredLevel = EnchantmentOverrideManager.getMaxLevel(self);
         if (configuredLevel != null) {
             cir.setReturnValue(configuredLevel);
+        }
+    }
+
+    /**
+     * Minecraft 1.21 Anvil checks compatibility using Enchantment.canBeCombined.
+     */
+    @Inject(method = "canBeCombined", at = @At("HEAD"), cancellable = true)
+    private static void manageenchantment$bypassIncompatible(RegistryEntry<Enchantment> first, RegistryEntry<Enchantment> second, CallbackInfoReturnable<Boolean> cir) {
+        if (ConfigManager.isIncompatibleBypassEnabled()) {
+            cir.setReturnValue(true);
         }
     }
 

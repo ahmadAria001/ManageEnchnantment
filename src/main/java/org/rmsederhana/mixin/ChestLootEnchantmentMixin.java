@@ -37,6 +37,13 @@ public class ChestLootEnchantmentMixin {
             Enchantment enchantment = registryEntry.value();
             int currentLevel = entry.getIntValue();
 
+            boolean isCurse = registryEntry.isIn(net.minecraft.registry.tag.EnchantmentTags.CURSE);
+            if (isCurse && ConfigManager.isBanCursesFromChestLoot()) {
+                builder.remove(i -> i.equals(registryEntry));
+                modified = true;
+                continue;
+            }
+
             String path = EnchantmentOverrideManager.getPath(enchantment);
             if (path == null) {
                 continue; // Unmapped enchantment

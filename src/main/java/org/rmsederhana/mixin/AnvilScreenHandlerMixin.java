@@ -1,8 +1,11 @@
 package org.rmsederhana.mixin;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.Property;
 import org.rmsederhana.config.ConfigManager;
+import org.rmsederhana.tier.TierManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -64,6 +67,18 @@ public class AnvilScreenHandlerMixin {
         if (newCost != currentCost) {
             this.levelCost.set(newCost);
         }
+    }
+
+    /**
+     * Redirects the isOf check in updateResult to allow combining items that share a category.
+     */
+    @org.spongepowered.asm.mixin.injection.Redirect(method = "updateResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isOf(Lnet/minecraft/item/Item;)Z"))
+    private boolean manageenchantment$allowCrossMaterialCombine(ItemStack stack, Item item) {
+        if (!ConfigManager.isMaterialTiersEnabled()) return stack.isOf(item);
+        
+        // 'stack' is the result copy of input[0]
+        // 'item' is input[1].getItem()
+        return stack.isOf(item) || TierManager.areSameCategory(stack, new ItemStack(item));
     }
 
     /**
