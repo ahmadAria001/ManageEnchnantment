@@ -2,6 +2,7 @@
 	"required": true,
 	"package": "org.rmsederhana.mixin",
 	"compatibilityLevel": "JAVA_21",
+	"refmap": "manageenchnantment-refmap.json",
 	"mixins": [
 		"EnchantmentMixin",
 		"AnvilScreenHandlerMixin",
@@ -14,8 +15,8 @@
 		"GrindstoneScreenHandlerMixin",
 		"EnchantmentTierMixin",
 		"EffectiveLevelMixin",
-		"TooltipLevelMixin",
-		"ComponentLevelMixin"
+		"ItemStackMixin",
+		"TooltipLevelMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

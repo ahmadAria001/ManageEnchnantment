@@ -35,7 +35,9 @@ public class ConfigManager {
     private static final Map<String, List<String>> anvilCategories = new HashMap<>();
     private static final Map<String, Integer> enchantmentOverrides = new HashMap<>();
 
-    // Existing mod expectations
+    // --- Getters ---
+    public static int getGlobalMaxLevelMultiplier() { return globalMaxLevelMultiplier; }
+    public static boolean isBypassIncompatibleEnchantments() { return bypassIncompatibleEnchantments; }
     public static boolean isAnvilCapRemoved() { return removeAnvilCap; }
     public static int getMaxAnvilCost() { return maxAnvilCost; }
     public static double getDiscountMultiplier() { return discountMultiplier; }
@@ -47,11 +49,47 @@ public class ConfigManager {
     public static boolean isBanCursesFromEnchantingTable() { return banCursesFromEnchantingTable; }
     public static boolean isBanCursesFromVillagerTrades() { return banCursesFromVillagerTrades; }
     public static boolean isBanCursesFromChestLoot() { return banCursesFromChestLoot; }
-    public static boolean isIncompatibleBypassEnabled() { return bypassIncompatibleEnchantments; }
     public static String getDefaultCapStrategy() { return defaultVillagerCapStrategy; }
     public static String getChestLootDefaultCapStrategy() { return defaultChestLootCapStrategy; }
     public static boolean isMaterialTiersEnabled() { return enableMaterialTiers; }
+    public static boolean isIncompatibleBypassEnabled() { return bypassIncompatibleEnchantments; }
 
+    public static Map<Integer, List<String>> getMaterialTiers() { return materialTiers; }
+    public static Map<String, List<String>> getAnvilCategories() { return anvilCategories; }
+    public static Map<String, Integer> getEnchantmentOverrides() { return enchantmentOverrides; }
+
+    // --- Setters (Required by YACL Config Screen) ---
+    public static void setGlobalMaxLevelMultiplier(int val) { globalMaxLevelMultiplier = val; }
+    public static void setBypassIncompatibleEnchantments(boolean val) { bypassIncompatibleEnchantments = val; }
+    public static void setRemoveAnvilCap(boolean val) { removeAnvilCap = val; }
+    public static void setMaxAnvilCost(int val) { maxAnvilCost = val; }
+    public static void setDiscountMultiplier(double val) { discountMultiplier = val; }
+    public static void setCapActualCost(boolean val) { capActualCost = val; }
+    public static void setDisablePriorWorkPenalty(boolean val) { disablePriorWorkPenalty = val; }
+    public static void setRemoveBookshelfCap(boolean val) { removeBookshelfCap = val; }
+    public static void setGrindstoneXpMultiplier(double val) { grindstoneXpMultiplier = val; }
+    public static void setGrindstoneXpCap(int val) { grindstoneXpCap = val; }
+    public static void setBanCursesFromEnchantingTable(boolean val) { banCursesFromEnchantingTable = val; }
+    public static void setBanCursesFromVillagerTrades(boolean val) { banCursesFromVillagerTrades = val; }
+    public static void setBanCursesFromChestLoot(boolean val) { banCursesFromChestLoot = val; }
+    public static void setMaterialTiersEnabled(boolean val) { enableMaterialTiers = val; }
+    
+    public static void setEnchantmentOverrides(Map<String, Integer> map) {
+        enchantmentOverrides.clear();
+        enchantmentOverrides.putAll(map);
+    }
+
+    public static void setMaterialTiers(Map<Integer, List<String>> map) {
+        materialTiers.clear();
+        materialTiers.putAll(map);
+    }
+
+    public static void setAnvilCategories(Map<String, List<String>> map) {
+        anvilCategories.clear();
+        anvilCategories.putAll(map);
+    }
+
+    // --- Business Logic ---
     public static int getVillagerTradeLimit(String enchantId) {
         return villagerOverrides.getOrDefault(enchantId, -1);
     }
@@ -66,8 +104,12 @@ public class ConfigManager {
         return vanillaMax * globalMaxLevelMultiplier;
     }
 
-    public static Map<Integer, List<String>> getMaterialTiers() { return materialTiers; }
-    public static Map<String, List<String>> getAnvilCategories() { return anvilCategories; }
+    public static void save() {
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+        Path configPath = configDir.resolve(CONFIG_FILE_NAME);
+        generateConfig(configPath);
+        org.rmsederhana.tier.TierManager.reload();
+    }
 
     public static void load() {
         Path configDir = FabricLoader.getInstance().getConfigDir();
@@ -198,34 +240,61 @@ public class ConfigManager {
         sb.append("[material_tiers]\n");
         sb.append("enable_material_tiers = ").append(enableMaterialTiers).append("\n\n");
         
-        sb.append("1 = [\"minecraft:wooden_sword\", \"minecraft:wooden_pickaxe\", \"minecraft:wooden_axe\", \"minecraft:wooden_shovel\", \"minecraft:wooden_hoe\", ");
-        sb.append("\"minecraft:stone_sword\", \"minecraft:stone_pickaxe\", \"minecraft:stone_axe\", \"minecraft:stone_shovel\", \"minecraft:stone_hoe\", ");
-        sb.append("\"#minecraft:leather_armor\"]\n");
-
-        sb.append("2 = [\"minecraft:iron_sword\", \"minecraft:iron_pickaxe\", \"minecraft:iron_axe\", \"minecraft:iron_shovel\", \"minecraft:iron_hoe\", ");
-        sb.append("\"minecraft:golden_sword\", \"minecraft:golden_pickaxe\", \"minecraft:golden_axe\", \"minecraft:golden_shovel\", \"minecraft:golden_hoe\", ");
-        sb.append("\"#minecraft:iron_armor\", \"#minecraft:golden_armor\", \"#minecraft:chainmail_armor\"]\n");
-
-        sb.append("3 = [\"minecraft:diamond_sword\", \"minecraft:diamond_pickaxe\", \"minecraft:diamond_axe\", \"minecraft:diamond_shovel\", \"minecraft:diamond_hoe\", ");
-        sb.append("\"#minecraft:diamond_armor\"]\n");
-
-        sb.append("4 = [\"minecraft:netherite_sword\", \"minecraft:netherite_pickaxe\", \"minecraft:netherite_axe\", \"minecraft:netherite_shovel\", \"minecraft:netherite_hoe\", ");
-        sb.append("\"#minecraft:netherite_armor\", \"minecraft:elytra\", \"minecraft:trident\"]\n\n");
+        if (materialTiers.isEmpty()) {
+            sb.append("1 = [\"minecraft:wooden_sword\", \"minecraft:wooden_pickaxe\", \"minecraft:wooden_axe\", \"minecraft:wooden_shovel\", \"minecraft:wooden_hoe\", ");
+            sb.append("\"minecraft:stone_sword\", \"minecraft:stone_pickaxe\", \"minecraft:stone_axe\", \"minecraft:stone_shovel\", \"minecraft:stone_hoe\", ");
+            sb.append("\"#minecraft:leather_armor\"]\n");
+            sb.append("2 = [\"minecraft:iron_sword\", \"minecraft:iron_pickaxe\", \"minecraft:iron_axe\", \"minecraft:iron_shovel\", \"minecraft:iron_hoe\", ");
+            sb.append("\"minecraft:golden_sword\", \"minecraft:golden_pickaxe\", \"minecraft:golden_axe\", \"minecraft:golden_shovel\", \"minecraft:golden_hoe\", ");
+            sb.append("\"#minecraft:iron_armor\", \"#minecraft:golden_armor\", \"#minecraft:chainmail_armor\"]\n");
+            sb.append("3 = [\"minecraft:diamond_sword\", \"minecraft:diamond_pickaxe\", \"minecraft:diamond_axe\", \"minecraft:diamond_shovel\", \"minecraft:diamond_hoe\", ");
+            sb.append("\"#minecraft:diamond_armor\"]\n");
+            sb.append("4 = [\"minecraft:netherite_sword\", \"minecraft:netherite_pickaxe\", \"minecraft:netherite_axe\", \"minecraft:netherite_shovel\", \"minecraft:netherite_hoe\", ");
+            sb.append("\"#minecraft:netherite_armor\", \"minecraft:elytra\", \"minecraft:trident\"]\n\n");
+        } else {
+            for (Map.Entry<Integer, List<String>> entry : materialTiers.entrySet()) {
+                sb.append(entry.getKey()).append(" = [");
+                for (int i = 0; i < entry.getValue().size(); i++) {
+                    sb.append("\"").append(entry.getValue().get(i)).append("\"");
+                    if (i < entry.getValue().size() - 1) sb.append(", ");
+                }
+                sb.append("]\n");
+            }
+            sb.append("\n");
+        }
 
         sb.append("[anvil_categories]\n");
-        sb.append("swords = [\"#minecraft:swords\"]\n");
-        sb.append("pickaxes = [\"#minecraft:pickaxes\"]\n");
-        sb.append("axes = [\"#minecraft:axes\"]\n");
-        sb.append("shovels = [\"#minecraft:shovels\"]\n");
-        sb.append("hoes = [\"#minecraft:hoes\"]\n");
-        sb.append("helmets = [\"#minecraft:helmets\"]\n");
-        sb.append("chestplates = [\"#minecraft:chestplates\"]\n");
-        sb.append("leggings = [\"#minecraft:leggings\"]\n");
-        sb.append("boots = [\"#minecraft:boots\"]\n\n");
+        if (anvilCategories.isEmpty()) {
+            sb.append("swords = [\"#minecraft:swords\"]\n");
+            sb.append("pickaxes = [\"#minecraft:pickaxes\"]\n");
+            sb.append("axes = [\"#minecraft:axes\"]\n");
+            sb.append("shovels = [\"#minecraft:shovels\"]\n");
+            sb.append("hoes = [\"#minecraft:hoes\"]\n");
+            sb.append("helmets = [\"#minecraft:helmets\"]\n");
+            sb.append("chestplates = [\"#minecraft:chestplates\"]\n");
+            sb.append("leggings = [\"#minecraft:leggings\"]\n");
+            sb.append("boots = [\"#minecraft:boots\"]\n\n");
+        } else {
+            for (Map.Entry<String, List<String>> entry : anvilCategories.entrySet()) {
+                sb.append(entry.getKey()).append(" = [");
+                for (int i = 0; i < entry.getValue().size(); i++) {
+                    sb.append("\"").append(entry.getValue().get(i)).append("\"");
+                    if (i < entry.getValue().size() - 1) sb.append(", ");
+                }
+                sb.append("]\n");
+            }
+            sb.append("\n");
+        }
 
         sb.append("[enchantments]\n");
-        sb.append("sharpness = -1\n");
-        sb.append("efficiency = -1\n");
+        if (enchantmentOverrides.isEmpty()) {
+            sb.append("sharpness = -1\n");
+            sb.append("efficiency = -1\n");
+        } else {
+            for (Map.Entry<String, Integer> entry : enchantmentOverrides.entrySet()) {
+                sb.append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+            }
+        }
         
         try {
             Files.writeString(path, sb.toString());
