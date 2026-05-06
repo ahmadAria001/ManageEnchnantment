@@ -1,4 +1,4 @@
-package org.rmsederhana.enchantment;
+package org.useReducer.enchantment;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.Registry;
@@ -6,8 +6,8 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import org.rmsederhana.ManageEnchnantment;
-import org.rmsederhana.config.ConfigManager;
+import org.useReducer.ManageEnchantment;
+import org.useReducer.config.ConfigManager;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -58,11 +58,11 @@ public class EnchantmentOverrideManager {
             if (configuredLevel != vanillaMaxLevel) {
                 MAX_LEVEL_OVERRIDES.put(enchantment, configuredLevel);
                 overrideCount++;
-                ManageEnchnantment.LOGGER.debug("Override {}: {} -> {}", id, vanillaMaxLevel, configuredLevel);
+                ManageEnchantment.LOGGER.debug("Override {}: {} -> {}", id, vanillaMaxLevel, configuredLevel);
             }
         }
 
-        ManageEnchnantment.LOGGER.info("Applied {} enchantment max level overrides", overrideCount);
+        ManageEnchantment.LOGGER.info("Applied {} enchantment max level overrides", overrideCount);
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.Registries;
@@ -11,8 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import org.rmsederhana.enchantment.EnchantmentOverrideManager;
-import org.rmsederhana.enchantment.OverrideState;
+import org.useReducer.enchantment.EnchantmentOverrideManager;
+import org.useReducer.enchantment.OverrideState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

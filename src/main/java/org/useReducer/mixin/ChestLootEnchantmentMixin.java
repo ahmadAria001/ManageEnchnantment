@@ -1,4 +1,4 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -7,8 +7,8 @@ import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.function.EnchantRandomlyLootFunction;
 import net.minecraft.loot.function.EnchantWithLevelsLootFunction;
 import net.minecraft.registry.entry.RegistryEntry;
-import org.rmsederhana.config.ConfigManager;
-import org.rmsederhana.enchantment.EnchantmentOverrideManager;
+import org.useReducer.config.ConfigManager;
+import org.useReducer.enchantment.EnchantmentOverrideManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

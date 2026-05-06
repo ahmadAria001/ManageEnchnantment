@@ -1,4 +1,4 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.entity.Entity;
@@ -6,7 +6,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.command.EnchantCommand;
 import net.minecraft.server.command.ServerCommandSource;
-import org.rmsederhana.ManageEnchnantment;
+import org.useReducer.ManageEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,7 +27,7 @@ public class EnchantCommandMixin {
             RegistryEntry<Enchantment> enchantment,
             int level,
             CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
-        ManageEnchnantment.LOGGER.info("[ManageEnchantment] /enchant command: level={}, enchantment={}", level, enchantment);
+        ManageEnchantment.LOGGER.info("[ManageEnchantment] /enchant command: level={}, enchantment={}", level, enchantment);
     }
 
     @Inject(method = "execute", at = @At("RETURN"))
@@ -37,6 +37,6 @@ public class EnchantCommandMixin {
             RegistryEntry<Enchantment> enchantment,
             int level,
             CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
-        ManageEnchnantment.LOGGER.info("[ManageEnchantment] /enchant command SUCCESS: level={}, result={}", level, cir.getReturnValue());
+        ManageEnchantment.LOGGER.info("[ManageEnchantment] /enchant command SUCCESS: level={}, result={}", level, cir.getReturnValue());
     }
 }

@@ -1,16 +1,16 @@
-package org.rmsederhana;
+package org.useReducer;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import org.rmsederhana.command.TestTradesCommand;
-import org.rmsederhana.config.ConfigManager;
-import org.rmsederhana.enchantment.EnchantmentOverrideManager;
+import org.useReducer.command.TestTradesCommand;
+import org.useReducer.config.ConfigManager;
+import org.useReducer.enchantment.EnchantmentOverrideManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ManageEnchnantment implements ModInitializer {
-	public static final String MOD_ID = "manageenchnantment";
+public class ManageEnchantment implements ModInitializer {
+	public static final String MOD_ID = "manageenchantment";
 
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.

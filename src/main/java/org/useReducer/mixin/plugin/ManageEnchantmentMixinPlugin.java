@@ -1,4 +1,4 @@
-package org.rmsederhana.mixin.plugin;
+package org.useReducer.mixin.plugin;
 
 import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;

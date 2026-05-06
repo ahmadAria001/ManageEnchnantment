@@ -1,7 +1,7 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.enchantment.EnchantmentHelper;
-import org.rmsederhana.config.ConfigManager;
+import org.useReducer.config.ConfigManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;

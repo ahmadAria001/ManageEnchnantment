@@ -1,4 +1,4 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.registry.Registry;
@@ -6,9 +6,9 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.village.TradeOffers;
-import org.rmsederhana.config.ConfigManager;
-import org.rmsederhana.enchantment.EnchantmentOverrideManager;
-import org.rmsederhana.enchantment.OverrideState;
+import org.useReducer.config.ConfigManager;
+import org.useReducer.enchantment.EnchantmentOverrideManager;
+import org.useReducer.enchantment.OverrideState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

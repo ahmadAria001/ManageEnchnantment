@@ -1,8 +1,8 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.screen.AnvilScreenHandler;
 import net.minecraft.screen.Property;
-import org.rmsederhana.config.ConfigManager;
+import org.useReducer.config.ConfigManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

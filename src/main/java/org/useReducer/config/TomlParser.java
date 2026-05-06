@@ -1,4 +1,4 @@
-package org.rmsederhana.config;
+package org.useReducer.config;
 
 import java.io.BufferedReader;
 import java.io.IOException;

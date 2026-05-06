@@ -1,4 +1,4 @@
-package org.rmsederhana.command;
+package org.useReducer.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -15,7 +15,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.village.TradeOffer;
 import net.minecraft.village.TradeOffers;
-import org.rmsederhana.enchantment.EnchantmentOverrideManager;
+import org.useReducer.enchantment.EnchantmentOverrideManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,12 +71,12 @@ public class TestTradesCommand {
         }
         
         final int finalTotal = totalEnchantments;
-        source.sendFeedback(() -> Text.literal("§aGenerated " + amount + " Librarian trades. Total enchanted books: " + finalTotal), false);
+        source.sendFeedback(() -> Text.literal("Â§aGenerated " + amount + " Librarian trades. Total enchanted books: " + finalTotal), false);
         for (Map.Entry<String, Integer> entry : highestLevels.entrySet()) {
             final String path = entry.getKey();
             final int maxLevel = entry.getValue();
             final int maxPrice = highestPrices.getOrDefault(path, 0);
-            source.sendFeedback(() -> Text.literal("§7- " + path + ": Max Level Seen: " + maxLevel + " (Highest Cost: " + maxPrice + " Emeralds)"), false);
+            source.sendFeedback(() -> Text.literal("Â§7- " + path + ": Max Level Seen: " + maxLevel + " (Highest Cost: " + maxPrice + " Emeralds)"), false);
         }
         
         return 1;

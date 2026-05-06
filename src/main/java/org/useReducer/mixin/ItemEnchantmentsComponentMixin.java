@@ -1,7 +1,7 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import org.rmsederhana.ManageEnchnantment;
+import org.useReducer.ManageEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -15,7 +15,7 @@ public class ItemEnchantmentsComponentMixin {
      */
     @ModifyConstant(method = "<clinit>", constant = @Constant(intValue = 255))
     private static int manageenchantment$uncapCodec(int original) {
-        ManageEnchnantment.LOGGER.info("[ManageEnchantment] Uncapped ENCHANTMENT_LEVEL_CODEC from {} to {}", original, Integer.MAX_VALUE);
+        ManageEnchantment.LOGGER.info("[ManageEnchantment] Uncapped ENCHANTMENT_LEVEL_CODEC from {} to {}", original, Integer.MAX_VALUE);
         return Integer.MAX_VALUE;
     }
 

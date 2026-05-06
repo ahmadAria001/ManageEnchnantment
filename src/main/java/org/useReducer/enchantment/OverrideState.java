@@ -1,4 +1,4 @@
-package org.rmsederhana.enchantment;
+package org.useReducer.enchantment;
 
 /**
  * Manages thread-local state for bypassing custom enchantment overrides.

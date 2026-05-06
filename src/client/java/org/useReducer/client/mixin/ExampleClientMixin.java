@@ -1,4 +1,4 @@
-package org.rmsederhana.client.mixin;
+package org.useReducer.client.mixin;
 
 import net.minecraft.client.MinecraftClient;
 import org.spongepowered.asm.mixin.Mixin;

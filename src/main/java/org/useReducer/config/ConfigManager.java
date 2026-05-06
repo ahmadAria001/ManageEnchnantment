@@ -1,7 +1,7 @@
-package org.rmsederhana.config;
+package org.useReducer.config;
 
 import net.fabricmc.loader.api.FabricLoader;
-import org.rmsederhana.ManageEnchnantment;
+import org.useReducer.ManageEnchantment;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +14,7 @@ import java.util.Map;
  * 
  * Configuration priority for max levels:
  *   1. Per-enchantment override (if not -1)
- *   2. Vanilla max level × global multiplier
+ *   2. Vanilla max level Ãƒâ€” global multiplier
  */
 public class ConfigManager {
 
@@ -110,7 +110,7 @@ public class ConfigManager {
 
         if (!Files.exists(configPath)) {
             generateDefaultConfig(configPath);
-            ManageEnchnantment.LOGGER.info("Generated default config at {}", configPath);
+            ManageEnchantment.LOGGER.info("Generated default config at {}", configPath);
         }
 
         try {
@@ -121,7 +121,7 @@ public class ConfigManager {
             globalMaxLevelMultiplier = TomlParser.getInt(general, "global_max_level_multiplier", 2);
 
             if (globalMaxLevelMultiplier < 1) {
-                ManageEnchnantment.LOGGER.warn("global_max_level_multiplier must be >= 1, defaulting to 1");
+                ManageEnchantment.LOGGER.warn("global_max_level_multiplier must be >= 1, defaulting to 1");
                 globalMaxLevelMultiplier = 1;
             }
 
@@ -180,11 +180,11 @@ public class ConfigManager {
                 }
             }
 
-            ManageEnchnantment.LOGGER.info("Config loaded: multiplier={}, anvil_cap_removed={}, {} enchantment overrides",
+            ManageEnchantment.LOGGER.info("Config loaded: multiplier={}, anvil_cap_removed={}, {} enchantment overrides",
                     globalMaxLevelMultiplier, removeAnvilCap, enchantmentOverrides.size());
 
         } catch (IOException e) {
-            ManageEnchnantment.LOGGER.error("Failed to load config, using defaults", e);
+            ManageEnchantment.LOGGER.error("Failed to load config, using defaults", e);
         }
     }
 
@@ -432,7 +432,7 @@ public class ConfigManager {
             Files.createDirectories(configPath.getParent());
             Files.writeString(configPath, sb.toString());
         } catch (IOException e) {
-            ManageEnchnantment.LOGGER.error("Failed to generate default config", e);
+            ManageEnchantment.LOGGER.error("Failed to generate default config", e);
         }
     }
 }

@@ -1,7 +1,7 @@
-package org.rmsederhana.mixin;
+package org.useReducer.mixin;
 
 import net.minecraft.component.type.ItemEnchantmentsComponent;
-import org.rmsederhana.ManageEnchnantment;
+import org.useReducer.ManageEnchantment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -14,7 +14,7 @@ public class ItemEnchantmentsComponentBuilderMixin {
      */
     @ModifyConstant(method = "set", constant = @Constant(intValue = 255))
     private int manageenchantment$uncapSet(int original) {
-        ManageEnchnantment.LOGGER.info("[ManageEnchantment] Builder.set uncap fired: {} -> {}", original, Integer.MAX_VALUE);
+        ManageEnchantment.LOGGER.info("[ManageEnchantment] Builder.set uncap fired: {} -> {}", original, Integer.MAX_VALUE);
         return Integer.MAX_VALUE;
     }
 
@@ -23,7 +23,7 @@ public class ItemEnchantmentsComponentBuilderMixin {
      */
     @ModifyConstant(method = "add", constant = @Constant(intValue = 255))
     private int manageenchantment$uncapAdd(int original) {
-        ManageEnchnantment.LOGGER.info("[ManageEnchantment] Builder.add uncap fired: {} -> {}", original, Integer.MAX_VALUE);
+        ManageEnchantment.LOGGER.info("[ManageEnchantment] Builder.add uncap fired: {} -> {}", original, Integer.MAX_VALUE);
         return Integer.MAX_VALUE;
     }
 }
