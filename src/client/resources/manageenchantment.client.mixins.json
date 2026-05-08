@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "org.useReducer.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"refmap": "manageenchantment-client-refmap.json",
+	"client": [
+		"ExampleClientMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
