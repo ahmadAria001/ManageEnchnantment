@@ -23,10 +23,16 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
 
+      # - name: build and publish to modrinth
+      #   run: ./gradlew build modrinth
+      #   env:
+      #     MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
       - name: build and publish to modrinth
-        run: ./gradlew build modrinth
+        run: ./gradlew build modrinth -PmodrinthVersionType=$VERSION_TYPE
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          VERSION_TYPE: ${{ github.event.release.prerelease && 'beta' || 'release' }}
+          MODRINTH_CHANGELOG: ${{ github.event.release.body }}
 
       - name: upload to github release
         uses: softprops/action-gh-release@v2
