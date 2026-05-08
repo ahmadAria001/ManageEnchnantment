@@ -21,7 +21,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"manageenchnantment" {
+		"manageenchantment" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}

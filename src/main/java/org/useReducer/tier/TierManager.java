@@ -1,4 +1,4 @@
-package org.rmsederhana.tier;
+package org.useReducer.tier;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -6,8 +6,8 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 
-import org.rmsederhana.ManageEnchnantment;
-import org.rmsederhana.config.ConfigManager;
+import org.useReducer.ManageEnchantment;
+import org.useReducer.config.ConfigManager;
 
 import java.util.*;
 

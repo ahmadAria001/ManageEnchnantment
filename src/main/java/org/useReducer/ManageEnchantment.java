@@ -30,7 +30,7 @@ public class ManageEnchantment implements ModInitializer {
 		// Apply enchantment overrides when the server starts
 		// At this point the dynamic registry (including enchantments) is loaded
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-			org.rmsederhana.tier.TierManager.reload();
+			org.useReducer.tier.TierManager.reload();
 			EnchantmentOverrideManager.applyOverrides(server);
 			LOGGER.info("[ManageEnchantment] Enchantment overrides and tiers applied.");
 		});
