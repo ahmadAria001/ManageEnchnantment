@@ -95,9 +95,12 @@ modrinth {
     uploadFile = remapJar                   // Fabric Loom specific: use remapJar, not jar!
     gameVersions = ["1.21.11"]       // The Minecraft versions your mod supports
     loaders = ["fabric"]                    // The mod loaders you support
+
+	clientSide = "required" 
+    serverSide = "required" 
     
     // Optional: Auto-detect dependencies from your fabric.mod.json
     dependencies {
-        // required.project "fabric-api"
+        required.project "fabric-api"
     }
 }
