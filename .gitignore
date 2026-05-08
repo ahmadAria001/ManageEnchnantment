@@ -8,6 +8,8 @@ another-mods/
 another-mods/**
 TODO/
 TODO/**
+.agent/
+.agent/**
 
 # eclipse
 
